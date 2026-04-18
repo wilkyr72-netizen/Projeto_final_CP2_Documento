@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alerta do Fogo Docs — Sistema de Monitoramento de Incêndios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --fire-red: #ff3b1f;
+      --fire-orange: #ff7a1a;
+      --fire-amber: #ffc13a;
+      --safe-green: #00e887;
+      --deep: #0a0c0f;
+      --surface: #111318;
+      --card: #161b22;
+      --border: #1f2733;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --code-bg: #0d1117;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--deep);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 6rem 8vw 4rem;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,59,31,0.15) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(255,122,26,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,59,31,0.12);
+      border: 1px solid rgba(255,59,31,0.3);
+      border-radius: 2px;
+      padding: 0.3rem 0.9rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fire-orange);
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--fire-red);
+      box-shadow: 0 0 8px var(--fire-red);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 12vw, 10rem);
+      line-height: 0.92;
+      letter-spacing: 0.01em;
+      color: #fff;
+      margin-bottom: 0.3rem;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .hero h1 span {
+      -webkit-text-stroke: 1.5px var(--fire-red);
+      color: transparent;
+      display: block;
+    }
+
+    .hero-sub {
+      max-width: 520px;
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 2rem 0 3rem;
+      font-weight: 300;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-sub strong { color: var(--fire-amber); font-weight: 500; }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.6rem;
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--fire-red);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--fire-orange); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,59,31,0.35); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--fire-red); color: var(--text); }
+
+    /* flame SVG bg */
+    .hero-flame {
+      position: absolute;
+      right: 4vw;
+      bottom: 0;
+      width: clamp(200px, 35vw, 520px);
+      opacity: 0.18;
+      pointer-events: none;
+      filter: blur(1px);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 8vw;
+    }
+
+    section { padding: 5rem 8vw; }
+    section:nth-child(even) { background: var(--surface); }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--fire-orange);
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── OVERVIEW CARDS ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .card {
+      background: var(--card);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s;
+    }
+    .card:hover { background: #1a2030; }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--fire-red), var(--fire-amber));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card:hover::after { opacity: 1; }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: #fff;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p { font-size: 0.88rem; color: var(--muted); }
+
+    /* ── TECH STACK ── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .tech-item {
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 2px;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .tech-item:hover { border-color: var(--fire-orange); transform: translateY(-4px); }
+
+    .tech-item .tech-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--fire-amber);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .tech-item p { font-size: 0.82rem; color: var(--muted); }
+
+    .tech-tag {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.15rem 0.5rem;
+      background: rgba(255,122,26,0.1);
+      border: 1px solid rgba(255,122,26,0.2);
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: var(--fire-orange);
+      text-transform: uppercase;
+    }
+
+    /* ── FLOW ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      max-width: 680px;
+    }
+
+    .flow-item {
+      display: flex;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    .flow-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .flow-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 2px solid var(--fire-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--fire-amber);
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .flow-connector {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(to bottom, var(--fire-red), var(--fire-orange));
+      min-height: 32px;
+      opacity: 0.4;
+    }
+
+    .flow-item:last-child .flow-connector { display: none; }
+
+    .flow-body {
+      padding-bottom: 2.5rem;
+    }
+
+    .flow-body h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      color: #fff;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+    }
+
+    .flow-body p { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── ALERT TEMPLATES ── */
+    .templates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 640px) { .templates { grid-template-columns: 1fr; } }
+
+    .template-card {
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .template-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .template-header.danger { background: rgba(255,59,31,0.12); color: var(--fire-red); }
+    .template-header.safe { background: rgba(0,232,135,0.1); color: var(--safe-green); }
+
+    .template-body {
+      padding: 1.2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: #8b949e;
+      line-height: 1.8;
+    }
+
+    .template-body .highlight-red { color: var(--fire-red); }
+    .template-body .highlight-green { color: var(--safe-green); }
+    .template-body .highlight-amber { color: var(--fire-amber); }
+    .template-body .highlight-blue { color: #79c0ff; }
+
+    /* ── TARGET AUDIENCE ── */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .audience-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      border-radius: 2px;
+      transition: border-color 0.2s;
+    }
+    .audience-card:hover { border-color: var(--fire-amber); }
+
+    .audience-avatar {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .audience-card h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    .audience-card p { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+
+    .audience-needs {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .audience-needs li {
+      font-size: 0.82rem;
+      color: var(--text);
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .audience-needs li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--fire-orange);
+    }
+
+    /* ── KNN ── */
+    .knn-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--fire-orange);
+      border-radius: 2px;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .knn-box h4 {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--fire-amber);
+      margin-bottom: 1rem;
+      letter-spacing: 0.06em;
+    }
+
+    .knn-box pre {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: #8b949e;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+
+    .knn-box pre .kw { color: #ff7b72; }
+    .knn-box pre .fn { color: #d2a8ff; }
+    .knn-box pre .str { color: #a5d6ff; }
+    .knn-box pre .num { color: var(--fire-amber); }
+    .knn-box pre .cm { color: #3d5a6e; font-style: italic; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--deep);
+      border-top: 1px solid var(--border);
+      padding: 3rem 8vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      color: var(--fire-orange);
+    }
+
+    footer p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(10,12,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 8vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+    .nav-brand span { color: var(--fire-red); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--fire-orange); }
+
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--fire-red) 30%, var(--fire-amber) 70%, transparent);
+      opacity: 0.3;
+      margin: 0;
+    }
+
+    /* ── STATUS BADGE ── */
+    .status-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .status-badge.active {
+      background: rgba(0,232,135,0.1);
+      border: 1px solid rgba(0,232,135,0.25);
+      color: var(--safe-green);
+    }
+    .status-badge.active::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--safe-green); box-shadow: 0 0 6px var(--safe-green);
+    }
+
+    .status-badge.warn {
+      background: rgba(255,193,58,0.1);
+      border: 1px solid rgba(255,193,58,0.25);
+      color: var(--fire-amber);
+    }
+
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 3rem;
+      left: 8vw;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      animation: fadeUp 1s 0.5s ease both;
+    }
+
+    .scroll-arrow {
+      width: 20px; height: 20px;
+      border-right: 1px solid var(--muted);
+      border-bottom: 1px solid var(--muted);
+      transform: rotate(45deg);
+      animation: bob 1.5s ease-in-out infinite;
+      margin-top: -4px;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: rotate(45deg) translateY(0); }
+      50% { transform: rotate(45deg) translateY(4px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Alerta do<span> Fogo</span></div>
+  <ul class="nav-links">
+    <li><a href="#overview">Visão Geral</a></li>
+    <li><a href="#tecnologias">Tecnologias</a></li>
+    <li><a href="#fluxo">Fluxo</a></li>
+    <li><a href="#alertas">Alertas</a></li>
+    <li><a href="#publico">Público</a></li>
+    <li><a href="#algoritmo">Algoritmo</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Sistema de Monitoramento</div>
+  <h1>Alerta do <span>Fogo</span></h1>
+  <p class="hero-sub">
+    Detecção e mapeamento de incêndios em tempo real com alertas automáticos via <strong>Discord</strong>, classificação por <strong>KNN</strong> e rastreamento georreferenciado.
+  </p>
+  <div class="hero-cta">
+    <a href="#overview" class="btn btn-primary">↓ Ver Documentação</a>
+    <a href="#fluxo" class="btn btn-outline">Fluxo do Sistema</a>
+  </div>
+
+  <!-- decorative flame SVG -->
+  <svg class="hero-flame" viewBox="0 0 300 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M150 480 C60 400 20 300 80 220 C90 205 85 180 100 160 C108 175 105 195 115 200 C120 150 140 110 150 60 C165 110 170 160 185 185 C195 170 192 145 205 130 C215 160 210 200 225 220 C275 295 245 400 150 480Z" fill="url(#fireGrad)" opacity="0.9"/>
+    <path d="M150 440 C90 380 70 300 110 250 C118 240 115 220 125 210 C130 225 128 240 140 245 C145 210 155 180 150 140 C162 175 168 210 178 220 C185 205 183 185 192 175 C200 200 196 230 210 250 C245 300 220 380 150 440Z" fill="url(#fireGrad2)" opacity="0.7"/>
+    <defs>
+      <linearGradient id="fireGrad" x1="150" y1="60" x2="150" y2="480" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#ff3b1f"/>
+        <stop offset="50%" stop-color="#ff7a1a"/>
+        <stop offset="100%" stop-color="#ffc13a"/>
+      </linearGradient>
+      <linearGradient id="fireGrad2" x1="150" y1="140" x2="150" y2="440" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#fff" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#ff7a1a" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="scroll-hint"><div class="scroll-arrow"></div> scroll</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <p class="section-label">01 — Visão Geral</p>
+  <h2 class="section-title">O que o projeto faz</h2>
+  <p style="max-width:640px; color:var(--muted); margin-bottom:2.5rem;">
+    O Alerta do Fogo monitora regiões geográficas específicas em busca de focos de incêndio. Ao detectar um evento, o sistema classifica o risco automaticamente, registra os dados em planilha e dispara uma mensagem formatada num grupo do Discord — com coordenadas, nível de perigo e recomendações.
+  </p>
+
+  <div class="status-row" style="margin-bottom:2.5rem;">
+    <span class="status-badge active">Sistema Ativo</span>
+    <span class="status-badge warn">Monitoramento Contínuo</span>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🗺️</div>
+      <h3>Mapeamento de Focos</h3>
+      <p>Detecta e localiza incêndios em pontos georreferenciados, retornando latitude, longitude e região afetada.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <h3>Classificação Inteligente</h3>
+      <p>Algoritmo KNN analisa os dados do foco e classifica automaticamente o nível de risco: Perigo ou Seguro.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💬</div>
+      <h3>Alertas via Discord</h3>
+      <p>Mensagens formatadas com template pré-definido são enviadas automaticamente ao grupo de monitoramento.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h3>Registro em Planilha</h3>
+      <p>Todos os eventos são armazenados em planilha com timestamp, coordenadas e classificação para análise posterior.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TECNOLOGIAS -->
+<section id="tecnologias">
+  <p class="section-label">02 — Stack</p>
+  <h2 class="section-title">Tecnologias Utilizadas</h2>
+  <div class="tech-grid">
+
+    <div class="tech-item">
+      <div class="tech-name">n8n</div>
+      <p>Plataforma de automação de workflows. Orquestra todo o pipeline: coleta de dados, processamento, armazenamento e envio de alertas.</p>
+      <span class="tech-tag">Orquestração</span>
+    </div>
+
+    <div class="tech-item">
+      <div class="tech-name">JavaScript + KNN</div>
+      <p>Lógica de classificação de risco implementada com o algoritmo K-Nearest Neighbors. Avalia proximidade e intensidade do foco.</p>
+      <span class="tech-tag">Machine Learning</span>
+    </div>
+
+    <div class="tech-item">
+      <div class="tech-name">Discord API</div>
+      <p>Canal de comunicação principal. Webhooks disparam mensagens formatadas com template de perigo ou segurança para o grupo.</p>
+      <span class="tech-tag">Notificações</span>
+    </div>
+
+    <div class="tech-item">
+      <div class="tech-name">Planilha (Google Sheets / Excel)</div>
+      <p>Base de dados operacional. Armazena histórico de eventos, coordenadas, timestamps e classificações de risco.</p>
+      <span class="tech-tag">Armazenamento</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- FLUXO -->
+<section id="fluxo">
+  <p class="section-label">03 — Fluxo</p>
+  <h2 class="section-title">Como Funciona</h2>
+
+  <div class="flow">
+
+    <div class="flow-item">
+      <div class="flow-line">
+        <div class="flow-dot">01</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-body">
+        <h4>Detecção de Evento</h4>
+        <p>O n8n monitora a fonte de dados de focos de calor (sensor, API pública ou feed) e aciona o workflow ao identificar um novo evento na área configurada.</p>
+      </div>
+    </div>
+
+    <div class="flow-item">
+      <div class="flow-line">
+        <div class="flow-dot">02</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-body">
+        <h4>Extração de Coordenadas</h4>
+        <p>Latitude, longitude, área estimada e intensidade do foco são extraídos e normalizados para o processamento seguinte.</p>
+      </div>
+    </div>
+
+    <div class="flow-item">
+      <div class="flow-line">
+        <div class="flow-dot">03</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-body">
+        <h4>Classificação por KNN</h4>
+        <p>O código JavaScript executa o algoritmo KNN comparando o novo foco com eventos históricos. O resultado é uma classificação binária: <strong style="color:var(--fire-red)">PERIGO</strong> ou <strong style="color:var(--safe-green)">NÃO PERIGO</strong>.</p>
+      </div>
+    </div>
+
+    <div class="flow-item">
+      <div class="flow-line">
+        <div class="flow-dot">04</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-body">
+        <h4>Registro na Planilha</h4>
+        <p>O evento é salvo com todos os dados: data, hora, coordenadas, classificação e fonte da detecção. Serve como base de treino para futuras classificações.</p>
+      </div>
+    </div>
+
+    <div class="flow-item">
+      <div class="flow-line">
+        <div class="flow-dot">05</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-body">
+        <h4>Alerta no Discord</h4>
+        <p>O n8n seleciona o template correto (perigo ou seguro) e envia a mensagem ao grupo Discord com todas as informações do evento de forma clara e padronizada.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ALERTAS -->
+<section id="alertas">
+  <p class="section-label">04 — Templates</p>
+  <h2 class="section-title">Modelos de Alerta Discord</h2>
+  <p style="color:var(--muted); max-width:580px; margin-bottom:2rem;">
+    Dois templates pré-definidos garantem comunicação padronizada e de fácil leitura. O sistema seleciona automaticamente o modelo com base na classificação KNN.
+  </p>
+
+  <div class="templates">
+
+    <div class="template-card">
+      <div class="template-header danger">🔥 Template — PERIGO</div>
+      <div class="template-body">
+        <span class="highlight-red">🚨 ALERTA DE INCÊNDIO DETECTADO</span><br><br>
+        <span class="highlight-amber">📍 Localização</span><br>
+        &nbsp;&nbsp;Lat: <span class="highlight-blue">-3.1190° S</span><br>
+        &nbsp;&nbsp;Lon: <span class="highlight-blue">-60.0217° W</span><br>
+        &nbsp;&nbsp;Região: <span class="highlight-blue">Amazonas, BR</span><br><br>
+        <span class="highlight-amber">⚠️ Classificação</span><br>
+        &nbsp;&nbsp;Nível: <span class="highlight-red">PERIGO ALTO</span><br>
+        &nbsp;&nbsp;Confiança KNN: <span class="highlight-blue">91%</span><br><br>
+        <span class="highlight-amber">🕐 Detecção</span><br>
+        &nbsp;&nbsp;<span class="highlight-blue">2025-04-18 14:32 UTC</span><br><br>
+        <span class="highlight-red">→ Acionar autoridades competentes</span>
+      </div>
+    </div>
+
+    <div class="template-card">
+      <div class="template-header safe">✅ Template — SEM PERIGO</div>
+      <div class="template-body">
+        <span class="highlight-green">✅ MONITORAMENTO — SEM RISCO</span><br><br>
+        <span class="highlight-amber">📍 Localização</span><br>
+        &nbsp;&nbsp;Lat: <span class="highlight-blue">-3.8720° S</span><br>
+        &nbsp;&nbsp;Lon: <span class="highlight-blue">-38.4612° W</span><br>
+        &nbsp;&nbsp;Região: <span class="highlight-blue">Ceará, BR</span><br><br>
+        <span class="highlight-amber">🔍 Classificação</span><br>
+        &nbsp;&nbsp;Nível: <span class="highlight-green">SEM PERIGO</span><br>
+        &nbsp;&nbsp;Confiança KNN: <span class="highlight-blue">87%</span><br><br>
+        <span class="highlight-amber">🕐 Detecção</span><br>
+        &nbsp;&nbsp;<span class="highlight-blue">2025-04-18 14:38 UTC</span><br><br>
+        <span class="highlight-green">→ Situação sob controle. Monitorando.</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PUBLICO -->
+<section id="publico">
+  <p class="section-label">05 — Público-Alvo</p>
+  <h2 class="section-title">Quem Usa o Sistema</h2>
+
+  <div class="audience-grid">
+
+    <div class="audience-card">
+      <div class="audience-avatar">🏘️</div>
+      <h3>População Local</h3>
+      <p>Moradores de regiões de risco que precisam de alertas rápidos e acessíveis sobre focos próximos.</p>
+      <ul class="audience-needs">
+        <li>Alertas imediatos e compreensíveis</li>
+        <li>Localização clara do foco</li>
+        <li>Orientação sobre nível de risco</li>
+        <li>Acesso via Discord (mobile-friendly)</li>
+      </ul>
+    </div>
+
+    <div class="audience-card">
+      <div class="audience-avatar">🌿</div>
+      <h3>Ministério do Meio Ambiente e Mudança do Clima</h3>
+      <p>Órgão federal responsável por políticas de combate ao desmatamento e gestão de crises ambientais.</p>
+      <ul class="audience-needs">
+        <li>Dados georreferenciados precisos</li>
+        <li>Histórico para análise de padrões</li>
+        <li>Integração com sistemas existentes</li>
+        <li>Relatórios via planilha automatizados</li>
+         <li>Séries temporais de eventos</li>
+        <li>Coordenadas para cruzamento de dados</li>
+        <li>Volume de focos por região/período</li>
+        <li>Exportação estruturada dos registros</li>
+      
+      </ul>
+    </div>
+
+
+  </div>
+</section>
+
+<!-- ALGORITMO -->
+<section id="algoritmo">
+  <p class="section-label">06 — Algoritmo</p>
+  <h2 class="section-title">Classificação por KNN</h2>
+  <p style="color:var(--muted); max-width:620px; margin-bottom:1.5rem;">
+    O K-Nearest Neighbors compara o novo foco de incêndio com eventos históricos na planilha. Com base nos K vizinhos mais próximos (por distância geográfica e intensidade), o sistema vota na classificação majoritária.
+  </p>
+
+  <div class="knn-box">
+    <h4>// Lógica simplificada de classificação — JavaScript (n8n Function Node)</h4>
+    <pre>
+<span class="cm">// Dados do evento atual (vindos do nó anterior)</span>
+<span class="kw">const</span> novoFoco = {
+  lat:       <span class="num">-3.119</span>,
+  lon:       <span class="num">-60.021</span>,
+  intensidade: <span class="num">87.4</span>,   <span class="cm">// FRP — Fire Radiative Power</span>
+  area_ha:   <span class="num">120</span>
+};
+
+<span class="cm">// Histórico da planilha (lido pelo nó Google Sheets)</span>
+<span class="kw">const</span> historico = $input.item.json.historico;
+<span class="kw">const</span> K = <span class="num">5</span>;
+
+<span class="cm">// Distância euclidiana normalizada</span>
+<span class="kw">function</span> <span class="fn">distancia</span>(a, b) {
+  <span class="kw">return</span> Math.<span class="fn">sqrt</span>(
+    (a.lat - b.lat)**<span class="num">2</span> +
+    (a.lon - b.lon)**<span class="num">2</span> +
+    ((a.intensidade - b.intensidade) / <span class="num">100</span>)**<span class="num">2</span>
+  );
+}
+
+<span class="cm">// Ordenar por proximidade e pegar os K mais próximos</span>
+<span class="kw">const</span> vizinhos = historico
+  .<span class="fn">map</span>(h => ({ ...h, dist: <span class="fn">distancia</span>(novoFoco, h) }))
+  .<span class="fn">sort</span>((a, b) => a.dist - b.dist)
+  .<span class="fn">slice</span>(<span class="num">0</span>, K);
+
+<span class="cm">// Votação majoritária</span>
+<span class="kw">const</span> votos = vizinhos.<span class="fn">filter</span>(v => v.classificacao === <span class="str">'PERIGO'</span>).<span class="fn">length</span>;
+<span class="kw">const</span> resultado = votos > K / <span class="num">2</span> ? <span class="str">'PERIGO'</span> : <span class="str">'NAO_PERIGO'</span>;
+<span class="kw">const</span> confianca = (Math.<span class="fn">max</span>(votos, K - votos) / K * <span class="num">100</span>).<span class="fn">toFixed</span>(<span class="num">0</span>);
+
+<span class="kw">return</span> [{ json: { ...novoFoco, resultado, confianca } }];
+    </pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">Alerta do Fogo</div>
+    <p style="margin-top:0.4rem;">Sistema de Monitoramento de Incêndios — Documentação Técnica</p>
+  </div>
+  <p>n8n · Discord · KNN · Google Sheets</p>
+</footer>
+
+</body>
+</html>
